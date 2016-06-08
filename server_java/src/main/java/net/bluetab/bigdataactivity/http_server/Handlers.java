@@ -30,6 +30,9 @@ public class Handlers {
       private static Cluster cluster;
       private static Session session;
 
+      private static int count = 0;
+      private static String creation = "1";
+
       public void DbPostHandler() {
       }
 
@@ -49,11 +52,18 @@ public class Handlers {
 
          try {
             String creation_time = (String)parameters.get("value");
-            creation_time = creation_time.substring(0, creation_time.length() - 3);
-            String cql = "INSERT INTO http_request_time " +
-                           "(creation_time, host,       id, insertion_time) VALUES ('" +
-                           creation_time + "',0," + (++id) + ",toTimestamp(now()))";
-            session.execute(new SimpleStatement(cql));
+            String creation_time_10ms = creation_time.substring(0, creation_time.length() - 4) + "0";
+            if (creation_time_10ms.equals(creation)){
+              ++count;
+            }
+            else {
+              String cql = "INSERT INTO http_request_time " +
+                           "(creation_time_10ms, num_request, host, id, insertion_time) VALUES ('" +
+                           creation + "'," + count + ",0," + (++id) + ",toTimestamp(now()))";
+              session.execute(new SimpleStatement(cql));
+              creation=creation_time_10ms;
+              count=1;
+            }
          } catch (Exception ex) {
             // handle any errors
             ex.printStackTrace();
